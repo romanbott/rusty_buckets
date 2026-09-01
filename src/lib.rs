@@ -13,4 +13,17 @@ impl<T> SimpleHashMap<T> {
             elements: 0,
         }
     }
+    fn insertar(&mut self, key: usize, value: T) -> Option<()> {
+        let index = key % self.num_buckets;
+
+        let bucket = self.buckets.get_mut(index).unwrap();
+
+        if let Some(_) = bucket.iter().find(|(i, _)| index == *i) {
+            None
+        } else {
+            bucket.push((index, value));
+
+            Some(())
+        }
+    }
 }
