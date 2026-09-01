@@ -26,6 +26,14 @@ impl<T> SimpleHashMap<T> {
             Some(())
         }
     }
+
+    fn buscar(&self, key: usize) -> Option<&T> {
+        self.buckets[key]
+            .iter()
+            .find_map(|(k, v)| if *k == key { Some(v) } else { None })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
