@@ -15,7 +15,7 @@ impl<T> SimpleHashMap<T> {
         }
     }
 
-    fn factor_carga(&self) -> f32 {
+    pub fn factor_carga(&self) -> f32 {
         self.elements as f32 / self.num_buckets as f32
     }
 
@@ -32,7 +32,7 @@ impl<T> SimpleHashMap<T> {
 
         let bucket = self.buckets.get_mut(index).unwrap();
 
-        if let Some(_) = bucket.iter().find(|(i, _)| key == *i) {
+        if bucket.iter().find(|(i, _)| key == *i).is_some() {
             None
         } else {
             bucket.push((key, value));
@@ -52,7 +52,7 @@ impl<T> SimpleHashMap<T> {
     pub fn eliminar(&mut self, key: usize) -> Option<T> {
         let index = self.hash(key);
 
-        let mut bucket = self.buckets.get_mut(index).unwrap();
+        let bucket = self.buckets.get_mut(index).unwrap();
 
         let n = bucket.iter().enumerate().find(|(_, (i, _))| key == *i);
 
@@ -64,6 +64,12 @@ impl<T> SimpleHashMap<T> {
             }
             None => None,
         }
+    }
+}
+
+impl<T> Default for SimpleHashMap<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
