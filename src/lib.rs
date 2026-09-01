@@ -130,4 +130,21 @@ mod tests {
         // La búsqueda ya no encuentra nada
         assert_eq!(val, None);
     }
+
+    #[test]
+    fn test_elimina_con_colision() {
+        let mut hm = SimpleHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let _ = hm.insertar(10, "mundo");
+        let res_elim = hm.eliminar(10);
+
+        let val = hm.buscar(3);
+
+        // La eliminación funcionó correctamente
+        assert_eq!(res_elim, Some("mundo"));
+
+        // La búsqueda ya no encuentra nada
+        assert_eq!(val, Some(&"hola"));
+    }
 }
