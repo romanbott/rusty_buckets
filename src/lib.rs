@@ -26,4 +26,26 @@ impl<T> SimpleHashMap<T> {
             Some(())
         }
     }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_inserta_simple() {
+        let mut hm = SimpleHashMap::new();
+
+        let succes = hm.insertar(3, "hola");
+
+        dbg!(hm);
+        assert!(succes.is_some());
+    }
+
+    #[test]
+    fn test_inserta_repetido_falla() {
+        let mut hm = SimpleHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let succes = hm.insertar(3, "hola");
+        assert!(succes.is_none());
+    }
 }
