@@ -1,14 +1,12 @@
-use std::ops::Index;
-
 #[derive(Debug)]
-struct SimpleHashMap<T> {
+pub struct SimpleHashMap<T> {
     num_buckets: usize,
     buckets: Vec<Vec<(usize, T)>>,
     elements: usize,
 }
 
 impl<T> SimpleHashMap<T> {
-    fn new() -> SimpleHashMap<T> {
+    pub fn new() -> SimpleHashMap<T> {
         let buckets = (0..7).map(|_| vec![]).collect();
         SimpleHashMap {
             num_buckets: 7,
@@ -17,11 +15,19 @@ impl<T> SimpleHashMap<T> {
         }
     }
 
+    fn factor_carga(&self) -> f32 {
+        self.elements as f32 / self.num_buckets as f32
+    }
+
+    pub fn esta_vacio(&self) -> bool {
+        self.elements == 0
+    }
+
     fn hash(&self, key: usize) -> usize {
         key % self.num_buckets
     }
 
-    fn insertar(&mut self, key: usize, value: T) -> Option<()> {
+    pub fn insertar(&mut self, key: usize, value: T) -> Option<()> {
         let index = self.hash(key);
 
         let bucket = self.buckets.get_mut(index).unwrap();
@@ -30,19 +36,20 @@ impl<T> SimpleHashMap<T> {
             None
         } else {
             bucket.push((key, value));
+            self.elements += 1;
 
             Some(())
         }
     }
 
-    fn buscar(&self, key: usize) -> Option<&T> {
+    pub fn buscar(&self, key: usize) -> Option<&T> {
         let index = self.hash(key);
         self.buckets[index]
             .iter()
             .find_map(|(k, v)| if *k == key { Some(v) } else { None })
     }
 
-    fn eliminar(&mut self, key: usize) -> Option<T> {
+    pub fn eliminar(&mut self, key: usize) -> Option<T> {
         let index = self.hash(key);
 
         let mut bucket = self.buckets.get_mut(index).unwrap();
@@ -52,6 +59,7 @@ impl<T> SimpleHashMap<T> {
         match n {
             Some((n, _)) => {
                 let (_, v) = bucket.remove(n);
+                self.elements -= 1;
                 Some(v)
             }
             None => None,
