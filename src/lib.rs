@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 #[derive(Debug)]
 struct SimpleHashMap<T> {
     num_buckets: usize,
@@ -33,6 +35,22 @@ impl<T> SimpleHashMap<T> {
         self.buckets[key]
             .iter()
             .find_map(|(k, v)| if *k == key { Some(v) } else { None })
+    }
+
+    fn eliminar(&mut self, key: usize) -> Option<T> {
+        let index = key % self.num_buckets;
+
+        let mut bucket = self.buckets.get_mut(index).unwrap();
+
+        let n = bucket.iter().enumerate().find(|(_, (i, _))| index == *i);
+
+        match n {
+            Some((n, _)) => {
+                let (_, v) = bucket.remove(n);
+                Some(v)
+            }
+            None => None,
+        }
     }
 }
 
@@ -88,5 +106,18 @@ mod tests {
         let val = hm.buscar(4);
 
         assert_eq!(val, None)
+    }
+
+    #[test]
+    fn test_elimina() {
+        let mut hm = SimpleHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let res_elim = hm.eliminar(3);
+
+        let val = hm.buscar(3);
+
+        assert_eq!(res_elim, Some("hola"));
+        assert_eq!(val, None);
     }
 }
