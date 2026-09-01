@@ -17,32 +17,37 @@ impl<T> SimpleHashMap<T> {
         }
     }
 
+    fn hash(&self, key: usize) -> usize {
+        key % self.num_buckets
+    }
+
     fn insertar(&mut self, key: usize, value: T) -> Option<()> {
-        let index = key % self.num_buckets;
+        let index = self.hash(key);
 
         let bucket = self.buckets.get_mut(index).unwrap();
 
-        if let Some(_) = bucket.iter().find(|(i, _)| index == *i) {
+        if let Some(_) = bucket.iter().find(|(i, _)| key == *i) {
             None
         } else {
-            bucket.push((index, value));
+            bucket.push((key, value));
 
             Some(())
         }
     }
 
     fn buscar(&self, key: usize) -> Option<&T> {
-        self.buckets[key]
+        let index = self.hash(key);
+        self.buckets[index]
             .iter()
             .find_map(|(k, v)| if *k == key { Some(v) } else { None })
     }
 
     fn eliminar(&mut self, key: usize) -> Option<T> {
-        let index = key % self.num_buckets;
+        let index = self.hash(key);
 
         let mut bucket = self.buckets.get_mut(index).unwrap();
 
-        let n = bucket.iter().enumerate().find(|(_, (i, _))| index == *i);
+        let n = bucket.iter().enumerate().find(|(_, (i, _))| key == *i);
 
         match n {
             Some((n, _)) => {
@@ -94,8 +99,10 @@ mod tests {
         let _ = hm.insertar(3, "hola");
         let _ = hm.insertar(10, "mundo");
         let val = hm.buscar(3);
+        let val2 = hm.buscar(10);
 
-        assert_eq!(val, Some(&"hola"))
+        assert_eq!(val, Some(&"hola"));
+        assert_eq!(val2, Some(&"mundo"))
     }
 
     #[test]
@@ -117,7 +124,10 @@ mod tests {
 
         let val = hm.buscar(3);
 
+        // La eliminación funcionó correctamente
         assert_eq!(res_elim, Some("hola"));
+
+        // La búsqueda ya no encuentra nada
         assert_eq!(val, None);
     }
 }
