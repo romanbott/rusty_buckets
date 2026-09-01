@@ -4,6 +4,7 @@ struct SimpleHashMap<T> {
     buckets: Vec<Vec<(usize, T)>>,
     elements: usize,
 }
+
 impl<T> SimpleHashMap<T> {
     fn new() -> SimpleHashMap<T> {
         let buckets = (0..7).map(|_| vec![]).collect();
@@ -13,6 +14,7 @@ impl<T> SimpleHashMap<T> {
             elements: 0,
         }
     }
+
     fn insertar(&mut self, key: usize, value: T) -> Option<()> {
         let index = key % self.num_buckets;
 
@@ -55,5 +57,36 @@ mod tests {
         let _ = hm.insertar(3, "hola");
         let succes = hm.insertar(3, "hola");
         assert!(succes.is_none());
+    }
+
+    #[test]
+    fn test_inserta_busca() {
+        let mut hm = SimpleHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let val = hm.buscar(3);
+
+        assert_eq!(val, Some(&"hola"))
+    }
+
+    #[test]
+    fn test_inserta_busca_colision() {
+        let mut hm = SimpleHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let _ = hm.insertar(10, "mundo");
+        let val = hm.buscar(3);
+
+        assert_eq!(val, Some(&"hola"))
+    }
+
+    #[test]
+    fn test_busca_inexistente() {
+        let mut hm = SimpleHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let val = hm.buscar(4);
+
+        assert_eq!(val, None)
     }
 }
