@@ -62,3 +62,17 @@ impl<T> OpenAddressingHashMap<usize, T> {
         Err(value)
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_inserta_simple() {
+        let mut hm = OpenAddressingHashMap::new();
+
+        let res = hm.insertar(3, "hola");
+
+        dbg!(&hm);
+        assert!(res.is_ok());
+    }
+}
