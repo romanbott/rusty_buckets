@@ -67,6 +67,10 @@ impl<T> OpenAddressingHashMap<usize, T> {
             return Err(value);
         }
 
+        if self.buscar(&key).is_some() {
+            return Err(value);
+        }
+
         for offset in 0..self.capacity {
             let index = self.hash(key + offset);
             let slot = self.slots.get_mut(index).unwrap();
@@ -77,8 +81,7 @@ impl<T> OpenAddressingHashMap<usize, T> {
                         return Err(value);
                     }
                 }
-                Element::Deleted => continue,
-                Element::Empty => {
+                _ => {
                     *slot = Element::Occupied(key, value);
                     self.elements += 1;
                     return Ok(());
@@ -116,6 +119,7 @@ impl<T> OpenAddressingHashMap<usize, T> {
             match slot {
                 Element::Occupied(k, _) => {
                     if k == key {
+                        self.elements -= 1;
                         return slot.take();
                     }
                 }
