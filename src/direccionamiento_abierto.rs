@@ -131,9 +131,8 @@ impl<T> OpenAddressingHashMap<usize, T> {
 impl<T: Display, K: Display> OpenAddressingHashMap<K, T> {
     pub fn imprime(&self) {
         for slot in &self.slots {
-            match slot {
-                Element::Occupied(k, v) => println!("{} => {}", k, v),
-                _ => {}
+            if let Element::Occupied(k, v) = slot {
+                println!("{} => {}", k, v)
             }
         }
     }
