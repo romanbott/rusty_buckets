@@ -107,6 +107,25 @@ impl<T> OpenAddressingHashMap<usize, T> {
 
         None
     }
+
+    pub fn eliminar(&mut self, key: &usize) -> Option<T> {
+        for offset in 0..self.capacity {
+            let index = self.hash(key + offset);
+            let slot = self.slots.get_mut(index).unwrap();
+
+            match slot {
+                Element::Occupied(k, _) => {
+                    if k == key {
+                        return slot.take();
+                    }
+                }
+                Element::Deleted => continue,
+                Element::Empty => return None,
+            }
+        }
+
+        None
+    }
 }
 
 impl<T: Display, K: Display> OpenAddressingHashMap<K, T> {
@@ -182,5 +201,23 @@ mod tests {
         assert_eq!(val1, Some("hola"));
         assert!(matches!(occupied, Element::Deleted));
         assert_eq!(val2, None);
+    }
+
+    #[test]
+    fn inserta_elimina_busca() {
+        let mut hm = OpenAddressingHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let _ = hm.insertar(10, "mundo");
+
+        let val = hm.buscar(&3);
+        assert_eq!(val, Some(&"hola"));
+
+        let eliminado = hm.eliminar(&3);
+
+        assert_eq!(eliminado, Some("hola"));
+
+        let val = hm.buscar(&10);
+        assert_eq!(val, Some(&"mundo"));
     }
 }
