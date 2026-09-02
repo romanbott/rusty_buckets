@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug)]
 pub struct BucketHashMap<T> {
     num_buckets: usize,
@@ -81,6 +83,16 @@ impl<T> BucketHashMap<T> {
                 Some(v)
             }
             None => None,
+        }
+    }
+}
+
+impl<T: Display> BucketHashMap<T> {
+    pub fn imprime(&self) {
+        for bucket in &self.buckets {
+            for (k, v) in bucket {
+                println!("{} => {}", k, v)
+            }
         }
     }
 }
