@@ -1,10 +1,27 @@
-use std::fmt::Display;
+use std::{fmt::Display, mem};
 
 #[derive(Debug)]
 enum Element<K, V> {
     Occupied(K, V),
     Empty,
     Deleted,
+}
+
+impl<K, V> Element<K, V> {
+    fn take(&mut self) -> Option<V> {
+        match self {
+            Element::Occupied(_, _) => {
+                let taken = mem::replace(self, Element::Deleted);
+
+                match taken {
+                    Element::Occupied(_, v) => Some(v),
+                    _ => unreachable!(),
+                }
+            }
+            Element::Empty => None,
+            Element::Deleted => None,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -151,5 +168,19 @@ mod tests {
 
         let val = hm.buscar(&10);
         assert_eq!(val, Some(&"mundo"))
+    }
+
+    #[test]
+    fn take_element() {
+        let mut occupied = Element::Occupied(3, "hola");
+
+        let mut empty: Element<(), ()> = Element::Empty;
+
+        let val1 = occupied.take();
+        let val2 = empty.take();
+
+        assert_eq!(val1, Some("hola"));
+        assert!(matches!(occupied, Element::Deleted));
+        assert_eq!(val2, None);
     }
 }
