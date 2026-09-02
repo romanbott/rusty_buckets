@@ -43,13 +43,20 @@ impl<T> OpenAddressingHashMap<usize, T> {
     }
 
     pub fn insertar(&mut self, key: usize, value: T) -> Result<(), T> {
-        let index = self.hash(key);
+        if self.elements == self.capacity {
+            return Err(value);
+        }
 
-        for _ in 0..self.capacity {
+        for offset in 0..self.capacity {
+            let index = self.hash(key + offset);
             let slot = self.slots.get_mut(index).unwrap();
 
             match slot {
-                Element::Occupied(_, _) => continue,
+                Element::Occupied(k, _) => {
+                    if *k == key {
+                        return Err(value);
+                    }
+                }
                 Element::Deleted => continue,
                 Element::Empty => {
                     *slot = Element::Occupied(key, value);
@@ -74,5 +81,21 @@ mod tests {
 
         dbg!(&hm);
         assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_inserta_lleno() {
+        let mut hm = OpenAddressingHashMap::new();
+
+        for i in 0..7 {
+            let res = hm.insertar(3 + 7 * i, i);
+            assert!(res.is_ok());
+            dbg!(&hm);
+        }
+
+        let res = hm.insertar(4, 0);
+
+        dbg!(&hm);
+        assert!(res.is_err());
     }
 }
