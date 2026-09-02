@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug)]
 enum Element<K, V> {
     Occupied(K, V),
@@ -11,6 +13,7 @@ pub struct OpenAddressingHashMap<K, V> {
     elements: usize,
     capacity: usize,
 }
+
 impl<T> OpenAddressingHashMap<usize, T> {
     pub fn new() -> OpenAddressingHashMap<usize, T> {
         let slots = (0..7).map(|_| Element::Empty).collect();
@@ -69,6 +72,24 @@ impl<T> OpenAddressingHashMap<usize, T> {
         Err(value)
     }
 }
+
+impl<T: Display, K: Display> OpenAddressingHashMap<K, T> {
+    pub fn imprime(&self) {
+        for slot in &self.slots {
+            match slot {
+                Element::Occupied(k, v) => println!("{} => {}", k, v),
+                _ => {}
+            }
+        }
+    }
+}
+
+impl<T> Default for OpenAddressingHashMap<usize, T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
