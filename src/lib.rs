@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+mod direccionamiento_abierto;
+
 #[derive(Debug)]
 pub struct BucketHashMap<T> {
     num_buckets: usize,
