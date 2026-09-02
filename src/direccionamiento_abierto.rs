@@ -223,4 +223,116 @@ mod tests {
         let val = hm.buscar(&10);
         assert_eq!(val, Some(&"mundo"));
     }
+
+    #[test]
+    fn insertar_reusa_deleted_slots() {
+        let mut hm = OpenAddressingHashMap::new();
+
+        let _ = hm.insertar(3, "Temporary");
+        hm.eliminar(&3);
+
+        let _ = hm.insertar(10, "Persistent");
+
+        match &hm.slots[3] {
+            Element::Occupied(k, _) => assert_eq!(*k, 10, "No se reusó el slot"),
+            _ => panic!("El slot 3 se debió reusar para la llave 10"),
+        }
+    }
+
+    #[test]
+    fn eliminar_disminuye_conteo() {
+        let mut hm = OpenAddressingHashMap::new();
+
+        for i in 0..7 {
+            assert!(hm.insertar(i, i * 10).is_ok());
+        }
+
+        assert!(hm.insertar(100, 0).is_err());
+
+        hm.eliminar(&2);
+        hm.eliminar(&4);
+
+        let res = hm.insertar(100, 999);
+        assert!(res.is_ok(), "No se pudo insertar");
+    }
+
+    #[test]
+    fn test_cadena_compleja_con_tombstones() {
+        let mut hm = OpenAddressingHashMap::new();
+
+        assert!(hm.insertar(0, "A").is_ok());
+        assert!(hm.insertar(7, "B").is_ok());
+        assert!(hm.insertar(14, "C").is_ok());
+        assert!(hm.insertar(21, "D").is_ok());
+        assert!(hm.insertar(28, "E").is_ok());
+
+        // El estado interno debe ser:
+        // Slot 0: Occupied(0)
+        // Slot 1: Occupied(7)
+        // Slot 2: Occupied(14)
+        // Slot 3: Occupied(21)
+        // Slot 4: Occupied(28)
+        // Slots 5, 6: Empty
+
+        assert_eq!(hm.eliminar(&7), Some("B"));
+        assert_eq!(hm.eliminar(&21), Some("D"));
+
+        // Slot 0: Occupied(0)
+        // Slot 1: Deleted
+        // Slot 2: Occupied(14)
+        // Slot 3: Deleted
+        // Slot 4: Occupied(28)
+
+        assert_eq!(
+            hm.buscar(&28),
+            Some(&"E"),
+            "Fallo al buscar 28: La busqueda se rompio al pasar por slots Eliminados/Ocupados"
+        );
+        assert_eq!(
+            hm.buscar(&14),
+            Some(&"C"),
+            "Fallo al buscar 14 despues de un slot Eliminado"
+        );
+
+        assert_eq!(
+            hm.buscar(&21),
+            None,
+            "Encontro una llave que debia estar eliminada!"
+        );
+
+        assert!(hm.insertar(14, "F").is_err());
+
+        assert!(hm.insertar(35, "F").is_ok());
+
+        // Slot 0: Occupied(0)
+        // Slot 1: Occupied(35)
+        // Slot 2: Occupied(14)
+        // Slot 3: Deleted
+        // Slot 4: Occupied(28)
+
+        assert_eq!(
+            hm.buscar(&35),
+            Some(&"F"),
+            "Fallo al encontrar la llave 35 recien insertada"
+        );
+        assert_eq!(
+            hm.buscar(&28),
+            Some(&"E"),
+            "La cadena se rompio para 28 despues de reusar un slot Eliminado"
+        );
+
+        assert_eq!(hm.eliminar(&0), Some("A"));
+
+        // Slot 0: Deleted
+        // Slot 1: Occupied(35)
+        // Slot 2: Occupied(14)
+        // Slot 3: Deleted
+        // Slot 4: Occupied(28)
+
+        assert_eq!(
+            hm.buscar(&28),
+            Some(&"E"),
+            "Fallo al encontrar 28 cuando la cadena de prueba comienza con un slot Eliminado"
+        );
+    }
 }
