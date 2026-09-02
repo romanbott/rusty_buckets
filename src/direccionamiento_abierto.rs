@@ -11,3 +11,54 @@ pub struct OpenAddressingHashMap<K, V> {
     elements: usize,
     capacity: usize,
 }
+impl<T> OpenAddressingHashMap<usize, T> {
+    pub fn new() -> OpenAddressingHashMap<usize, T> {
+        let slots = (0..7).map(|_| Element::Empty).collect();
+        OpenAddressingHashMap {
+            slots,
+            elements: 0,
+            capacity: 7,
+        }
+    }
+
+    pub fn with_capacity(capacity: usize) -> OpenAddressingHashMap<usize, T> {
+        let slots = (0..capacity).map(|_| Element::Empty).collect();
+        OpenAddressingHashMap {
+            slots,
+            elements: 0,
+            capacity,
+        }
+    }
+
+    pub fn factor_carga(&self) -> f32 {
+        self.elements as f32 / self.capacity as f32
+    }
+
+    pub fn esta_vacio(&self) -> bool {
+        self.elements == 0
+    }
+
+    fn hash(&self, key: usize) -> usize {
+        key % self.capacity
+    }
+
+    pub fn insertar(&mut self, key: usize, value: T) -> Result<(), T> {
+        let index = self.hash(key);
+
+        for _ in 0..self.capacity {
+            let slot = self.slots.get_mut(index).unwrap();
+
+            match slot {
+                Element::Occupied(_, _) => continue,
+                Element::Deleted => continue,
+                Element::Empty => {
+                    *slot = Element::Occupied(key, value);
+                    self.elements += 1;
+                    return Ok(());
+                }
+            }
+        }
+
+        Err(value)
+    }
+}
