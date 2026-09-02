@@ -1,14 +1,14 @@
 #[derive(Debug)]
-pub struct SimpleHashMap<T> {
+pub struct BucketHashMap<T> {
     num_buckets: usize,
     buckets: Vec<Vec<(usize, T)>>,
     elements: usize,
 }
 
-impl<T> SimpleHashMap<T> {
-    pub fn new() -> SimpleHashMap<T> {
+impl<T> BucketHashMap<T> {
+    pub fn new() -> BucketHashMap<T> {
         let buckets = (0..7).map(|_| vec![]).collect();
-        SimpleHashMap {
+        BucketHashMap {
             num_buckets: 7,
             buckets,
             elements: 0,
@@ -85,7 +85,7 @@ impl<T> SimpleHashMap<T> {
     }
 }
 
-impl<T> Default for SimpleHashMap<T> {
+impl<T> Default for BucketHashMap<T> {
     fn default() -> Self {
         Self::new()
     }
@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn test_inserta_simple() {
-        let mut hm = SimpleHashMap::new();
+        let mut hm = BucketHashMap::new();
 
         let res = hm.insertar(3, "hola");
 
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_inserta_repetido_falla() {
-        let mut hm = SimpleHashMap::new();
+        let mut hm = BucketHashMap::new();
 
         let _ = hm.insertar(3, "hola");
         let res = hm.insertar(3, "hola");
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn test_inserta_busca() {
-        let mut hm = SimpleHashMap::new();
+        let mut hm = BucketHashMap::new();
 
         let _ = hm.insertar(3, "hola");
         let val = hm.buscar(3);
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_inserta_busca_colision() {
-        let mut hm = SimpleHashMap::new();
+        let mut hm = BucketHashMap::new();
 
         let _ = hm.insertar(3, "hola");
         let _ = hm.insertar(10, "mundo");
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_busca_inexistente() {
-        let mut hm = SimpleHashMap::new();
+        let mut hm = BucketHashMap::new();
 
         let _ = hm.insertar(3, "hola");
         let val = hm.buscar(4);
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_upsert() {
-        let mut hm = SimpleHashMap::new();
+        let mut hm = BucketHashMap::new();
 
         let _ = hm.insertar(3, "hola");
         let res = hm.upsert(3, "mundo");
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_elimina() {
-        let mut hm = SimpleHashMap::new();
+        let mut hm = BucketHashMap::new();
 
         let _ = hm.insertar(3, "hola");
         let res_elim = hm.eliminar(3);
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn test_elimina_con_colision() {
-        let mut hm = SimpleHashMap::new();
+        let mut hm = BucketHashMap::new();
 
         let _ = hm.insertar(3, "hola");
         let _ = hm.insertar(10, "mundo");
