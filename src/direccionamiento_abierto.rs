@@ -71,6 +71,25 @@ impl<T> OpenAddressingHashMap<usize, T> {
 
         Err(value)
     }
+
+    pub fn buscar(&self, key: &usize) -> Option<&T> {
+        for offset in 0..self.capacity {
+            let index = self.hash(key + offset);
+            let slot = self.slots.get(index).unwrap();
+
+            match slot {
+                Element::Occupied(k, value) => {
+                    if k == key {
+                        return Some(value);
+                    }
+                }
+                Element::Deleted => continue,
+                Element::Empty => return None,
+            }
+        }
+
+        None
+    }
 }
 
 impl<T: Display, K: Display> OpenAddressingHashMap<K, T> {
@@ -118,5 +137,19 @@ mod tests {
 
         dbg!(&hm);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_inserta_busca() {
+        let mut hm = OpenAddressingHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let _ = hm.insertar(10, "mundo");
+
+        let val = hm.buscar(&3);
+        assert_eq!(val, Some(&"hola"));
+
+        let val = hm.buscar(&10);
+        assert_eq!(val, Some(&"mundo"))
     }
 }
