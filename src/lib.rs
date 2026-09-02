@@ -27,19 +27,18 @@ impl<T> SimpleHashMap<T> {
         key % self.num_buckets
     }
 
-    pub fn insertar(&mut self, key: usize, value: T) -> Option<()> {
+    pub fn insertar(&mut self, key: usize, value: T) -> Result<(), T> {
         let index = self.hash(key);
-
         let bucket = self.buckets.get_mut(index).unwrap();
 
-        if bucket.iter().find(|(i, _)| key == *i).is_some() {
-            None
-        } else {
-            bucket.push((key, value));
-            self.elements += 1;
-
-            Some(())
+        if bucket.iter().position(|(k, _)| *k == key).is_some() {
+            return Err(value);
         }
+
+        self.elements += 1;
+        bucket.push((key, value));
+
+        Ok(())
     }
 
     pub fn buscar(&self, key: usize) -> Option<&T> {
@@ -81,10 +80,10 @@ mod tests {
     fn test_inserta_simple() {
         let mut hm = SimpleHashMap::new();
 
-        let succes = hm.insertar(3, "hola");
+        let res = hm.insertar(3, "hola");
 
-        dbg!(hm);
-        assert!(succes.is_some());
+        dbg!(&hm);
+        assert!(res.is_ok());
     }
 
     #[test]
@@ -92,8 +91,8 @@ mod tests {
         let mut hm = SimpleHashMap::new();
 
         let _ = hm.insertar(3, "hola");
-        let succes = hm.insertar(3, "hola");
-        assert!(succes.is_none());
+        let res = hm.insertar(3, "hola");
+        assert!(res.is_err());
     }
 
     #[test]
