@@ -22,6 +22,13 @@ impl<K, V> Element<K, V> {
             Element::Deleted => None,
         }
     }
+
+    fn replace_value(&mut self, new_value: V) -> Option<V> {
+        match self {
+            Element::Occupied(_, v) => Some(mem::replace(v, new_value)),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -125,6 +132,27 @@ impl<T> OpenAddressingHashMap<usize, T> {
                 }
                 Element::Deleted => continue,
                 Element::Empty => return None,
+            }
+        }
+
+        None
+    }
+
+    pub fn upsert(&mut self, key: usize, value: T) -> Option<T> {
+        for offset in 0..self.capacity {
+            let index = self.hash(key + offset);
+            let slot = self.slots.get_mut(index).unwrap();
+
+            match slot {
+                Element::Occupied(k, _) if *k == key => {
+                    return slot.replace_value(value);
+                }
+                Element::Deleted | Element::Empty => {
+                    *slot = Element::Occupied(key, value);
+                    self.elements += 1;
+                    return None;
+                }
+                _ => {}
             }
         }
 
@@ -334,5 +362,21 @@ mod tests {
             Some(&"E"),
             "Fallo al encontrar 28 cuando la cadena de prueba comienza con un slot Eliminado"
         );
+    }
+
+    #[test]
+    fn test_upsert() {
+        let mut hm = OpenAddressingHashMap::new();
+
+        let _ = hm.insertar(3, "hola");
+        let res = hm.upsert(3, "mundo");
+        assert_eq!(res, Some("hola"));
+
+        let replaced = hm.buscar(&3);
+        assert_eq!(replaced, Some(&"mundo"));
+
+        let res = hm.upsert(10, "nuevo");
+        assert_eq!(res, None);
+        assert_eq!(hm.buscar(&10), Some(&"nuevo"));
     }
 }
