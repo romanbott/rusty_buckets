@@ -1,14 +1,16 @@
 use std::{fmt::Display, mem};
 
+use crate::HashMapOps;
+
 #[derive(Debug)]
-enum Element<K, V> {
+pub(crate) enum Element<K, V> {
     Occupied(K, V),
     Empty,
     Deleted,
 }
 
 impl<K, V> Element<K, V> {
-    fn take(&mut self) -> Option<V> {
+    pub(crate) fn take(&mut self) -> Option<V> {
         match self {
             Element::Occupied(_, _) => {
                 let taken = mem::replace(self, Element::Deleted);
@@ -23,7 +25,7 @@ impl<K, V> Element<K, V> {
         }
     }
 
-    fn replace_value(&mut self, new_value: V) -> Option<V> {
+    pub(crate) fn replace_value(&mut self, new_value: V) -> Option<V> {
         match self {
             Element::Occupied(_, v) => Some(mem::replace(v, new_value)),
             _ => None,
@@ -31,15 +33,21 @@ impl<K, V> Element<K, V> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct OpenAddressingHashMap<K, V> {
-    slots: Vec<Element<K, V>>,
-    elements: usize,
-    capacity: usize,
+    pub(crate) slots: Vec<Element<K, V>>,
+    pub(crate) elements: usize,
+    pub(crate) capacity: usize,
 }
 
-impl<T> OpenAddressingHashMap<usize, T> {
-    pub fn new() -> OpenAddressingHashMap<usize, T> {
+impl<K, V> OpenAddressingHashMap<K, V> {
+    pub(crate) fn hash(&self, key: usize) -> usize {
+        key % self.capacity
+    }
+}
+
+impl<T> HashMapOps<usize, T> for OpenAddressingHashMap<usize, T> {
+    fn new() -> Self {
         let slots = (0..7).map(|_| Element::Empty).collect();
         OpenAddressingHashMap {
             slots,
@@ -48,7 +56,7 @@ impl<T> OpenAddressingHashMap<usize, T> {
         }
     }
 
-    pub fn with_capacity(capacity: usize) -> OpenAddressingHashMap<usize, T> {
+    fn with_capacity(capacity: usize) -> Self {
         let slots = (0..capacity).map(|_| Element::Empty).collect();
         OpenAddressingHashMap {
             slots,
@@ -57,19 +65,15 @@ impl<T> OpenAddressingHashMap<usize, T> {
         }
     }
 
-    pub fn factor_carga(&self) -> f32 {
+    fn factor_carga(&self) -> f32 {
         self.elements as f32 / self.capacity as f32
     }
 
-    pub fn esta_vacio(&self) -> bool {
+    fn esta_vacio(&self) -> bool {
         self.elements == 0
     }
 
-    fn hash(&self, key: usize) -> usize {
-        key % self.capacity
-    }
-
-    pub fn insertar(&mut self, key: usize, value: T) -> Result<(), T> {
+    fn insertar(&mut self, key: usize, value: T) -> Result<(), T> {
         if self.elements == self.capacity {
             return Err(value);
         }
@@ -99,46 +103,7 @@ impl<T> OpenAddressingHashMap<usize, T> {
         Err(value)
     }
 
-    pub fn buscar(&self, key: &usize) -> Option<&T> {
-        for offset in 0..self.capacity {
-            let index = self.hash(key + offset);
-            let slot = self.slots.get(index).unwrap();
-
-            match slot {
-                Element::Occupied(k, value) => {
-                    if k == key {
-                        return Some(value);
-                    }
-                }
-                Element::Deleted => continue,
-                Element::Empty => return None,
-            }
-        }
-
-        None
-    }
-
-    pub fn eliminar(&mut self, key: &usize) -> Option<T> {
-        for offset in 0..self.capacity {
-            let index = self.hash(key + offset);
-            let slot = self.slots.get_mut(index).unwrap();
-
-            match slot {
-                Element::Occupied(k, _) => {
-                    if k == key {
-                        self.elements -= 1;
-                        return slot.take();
-                    }
-                }
-                Element::Deleted => continue,
-                Element::Empty => return None,
-            }
-        }
-
-        None
-    }
-
-    pub fn upsert(&mut self, key: usize, value: T) -> Option<T> {
+    fn upsert(&mut self, key: usize, value: T) -> Option<T> {
         for offset in 0..self.capacity {
             let index = self.hash(key + offset);
             let slot = self.slots.get_mut(index).unwrap();
@@ -158,21 +123,56 @@ impl<T> OpenAddressingHashMap<usize, T> {
 
         None
     }
-}
 
-impl<T: Display, K: Display> OpenAddressingHashMap<K, T> {
-    pub fn imprime(&self) {
+    fn buscar(&self, key: &usize) -> Option<&T> {
+        for offset in 0..self.capacity {
+            let index = self.hash(key + offset);
+            let slot = self.slots.get(index).unwrap();
+
+            match slot {
+                Element::Occupied(k, value) => {
+                    if k == key {
+                        return Some(value);
+                    }
+                }
+                Element::Deleted => continue,
+                Element::Empty => return None,
+            }
+        }
+
+        None
+    }
+
+    fn eliminar(&mut self, key: &usize) -> Option<T> {
+        for offset in 0..self.capacity {
+            let index = self.hash(key + offset);
+            let slot = self.slots.get_mut(index).unwrap();
+
+            match slot {
+                Element::Occupied(k, _) => {
+                    if k == key {
+                        self.elements -= 1;
+                        return slot.take();
+                    }
+                }
+                Element::Deleted => continue,
+                Element::Empty => return None,
+            }
+        }
+
+        None
+    }
+
+    fn imprime(&self)
+    where
+        usize: Display,
+        T: Display,
+    {
         for slot in &self.slots {
             if let Element::Occupied(k, v) = slot {
                 println!("{} => {}", k, v)
             }
         }
-    }
-}
-
-impl<T> Default for OpenAddressingHashMap<usize, T> {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -380,3 +380,4 @@ mod tests {
         assert_eq!(hm.buscar(&10), Some(&"nuevo"));
     }
 }
+
