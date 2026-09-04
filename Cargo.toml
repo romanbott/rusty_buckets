@@ -3,4 +3,9 @@ name = "rusty_buckets"
 version = "0.1.0"
 edition = "2024"
 
+
+[[bin]]
+name = "repl"
+path = "src/bin/repl.rs"
+
 [dependencies]
